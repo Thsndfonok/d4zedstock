@@ -84,7 +84,7 @@
     .p-card:hover .thumb .art{transform:scale(1.04)}
     .thumb .art{transition:transform .4s ease}
 
-    /* KÉPEK (kártya / részletező / quick view) */
+    /* KÉPEK */
     .thumb img, #pdArt img, #qvArt img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 
     /* CART */
@@ -119,7 +119,7 @@
     .tilt{perspective:800px}.tilt>*{transform:rotateX(var(--rx,0)) rotateY(var(--ry,0));transition:transform .2s}
   </style>
 
-  <!-- Stripe JS (kötelező a Checkout-hoz) -->
+  <!-- Stripe JS (Checkout-hoz kötelező) -->
   <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
@@ -287,66 +287,33 @@
     <div class="cart-footer">
       <div class="summary"><span>Köztes összeg</span><strong id="subtotal" aria-live="polite">0 Ft</strong></div>
       <button class="btn btn-prim" id="checkoutBtn">Tovább a fizetéshez</button>
-      <small style="opacity:.65">* Demo kosár – Stripe Checkout-tal fizethető.</small>
+      <small style="opacity:.65">* Stripe Checkout-tal fizethető.</small>
     </div>
   </aside>
 
   <script>
-  // --- STRIPE kulcsok ---
-  const STRIPE_PUBLISHABLE_KEY = "pk_live_51S1yqr1Jm1mdXy5jM18rwc5y5JyUA2KhWIwJ5VcwXp9u7LlSWYey34FGBbLw36n4MF6QyaN8wx40we4ZLxRR8SB900IMi7H4hq";     // maradhat a tiéd
-  const SUCCESS_URL = "https://d4zedstock.store/success.html";
-  const CANCEL_URL  = "https://d4zedstock.store/cancel.html";
-  const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+    /* ===== Stripe beállítás ===== */
+    const STRIPE_PUBLISHABLE_KEY = "pk_live_51S1yqr1Jm1mdXy5jM18rwc5y5JyUA2KhWIwJ5VcwXp9u7LlSWYey34FGBbLw36n4MF6QyaN8wx40we4ZLxRR8SB900IMi7H4hq";
+    const SUCCESS_URL = "https://d4zedstock.store/success.html";
+    const CANCEL_URL  = "https://d4zedstock.store/cancel.html";
+    const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
 
-  // --- MINDIG id alapján mapeljünk (nem név!) ---
-  const PRICE_BY_ID = {
-    p1: "price_1S1zds1Jm1mdXy5j7od0Y4dh", // Fivem Ready
-    p2: "price_1S1zeQ1Jm1mdXy5jWoPnJCl9", // Discord members
-    p3: "price_1S1zfG1Jm1mdXy5jlnd31UqR", // youtube follower
-    p4: "price_1S1zfm1Jm1mdXy5jFFGEJI7X", // HBO MAX
-    p5: "price_1S1zde1Jm1mdXy5jywSL35GJ", // Steam Account
-    p6: "price_1S1zet1Jm1mdXy5jL5nHbwZF", // Tiktok Follower
-    p7: "price_1S1zfy1Jm1mdXy5jrNovw79f", // Disney
-    p8: "price_1S1zgA1Jm1mdXy5j4nSP6eGl", // Netflix
-    p9: "price_1S1ze71Jm1mdXy5jfJuTsUF0", // Random Decorations
-    p10:"price_1S1zdS1Jm1mdXy5jCop9lfJC", // Discord Account
-    p11:"price_1S1zef1Jm1mdXy5jf8VE4Vb8", // Instagram Follower
-    p12:"price_1S1zfS1Jm1mdXy5jKhL5CyMf", // Chuncyroll
-  };
-
-  // … a kódod többi része …
-
-  // ===== STRIPE: Fizetés a kosárból =====
-  checkoutBtn.addEventListener("click", async () => {
-    if (!CART.length) { alert("A kosár üres."); return; }
-
-    // Ellenőrzés – minden kosár tételnek legyen Price ID-ja azonosító alapján
-    const missing = CART.filter(it => !PRICE_BY_ID[it.id]);
-    if (missing.length) {
-      alert("Hiányzik Price ID ezekhez: " + missing.map(m => m.name).join(", "));
-      return;
-    }
-
-    // A Stripe-hoz küldött tételek
-    const lineItems = CART.map(it => ({
-      price: PRICE_BY_ID[it.id],
-      quantity: it.qty
-    }));
-
-    try {
-      const result = await stripe.redirectToCheckout({
-        lineItems,
-        mode: "payment",
-        successUrl: SUCCESS_URL,
-        cancelUrl: CANCEL_URL,
-      });
-      if (result.error) alert(result.error.message);
-    } catch (err) {
-      console.error(err);
-      alert("Hiba a fizetés indításakor.");
-    }
-  });
-</script>
+    /* ID-alapú mapping: a saját termék-id (p1..p12) → Stripe Price ID */
+    const PRICE_BY_ID = {
+      p1: "price_1S1zds1Jm1mdXy5j7od0Y4dh", // Fivem Ready
+      p2: "price_1S1zeQ1Jm1mdXy5jWoPnJCl9", // Discord members
+      p3: "price_1S1zfG1Jm1mdXy5jlnd31UqR", // youtube follower
+      p4: "price_1S1zfm1Jm1mdXy5jFFGEJI7X", // HBO MAX (hbomax)
+      p5: "price_1S1zde1Jm1mdXy5jywSL35GJ", // Steam Account
+      p6: "price_1S1zet1Jm1mdXy5jL5nHbwZF", // Tiktok Follower
+      p7: "price_1S1zfy1Jm1mdXy5jrNovw79f", // Disney (disney)
+      p8: "price_1S1zgA1Jm1mdXy5j4nSP6eGl", // Netflix (netflix)
+      p9: "price_1S1ze71Jm1mdXy5jfJuTsUF0", // Random Decorations
+      p10:"price_1S1zdS1Jm1mdXy5jCop9lfJC", // Discord Account
+      p11:"price_1S1zef1Jm1mdXy5jf8VE4Vb8", // Instagram Follower
+      p12:"price_1S1zfS1Jm1mdXy5jKhL5CyMf"  // Chuncyroll
+    };
+  </script>
 
   <script>
     /* ===== Social linkek ===== */
@@ -356,7 +323,7 @@
       discord:'https://discord.gg/8XsAAE43Gf',
     };
 
-    /* ===== Adatok (adj img mezőt, ha képet akarsz) ===== */
+    /* ===== Adatok ===== */
     const PRODUCTS = [
       { id:'p1', name:'Fivem Ready', price:40, badge:'ÚJ', category:'Fivem', rating:4.8,
         img:'assets/products/fivem.jpg',
@@ -601,20 +568,20 @@
       const subtotal=CART.reduce((s,x)=>s+x.price*x.qty,0); subtotalEl.textContent=ft(subtotal);
     }
 
-    /* ===== STRIPE: Fizetés a kosárból ===== */
+    /* ===== STRIPE: Fizetés a kosárból (ID-alapú mappinggal) ===== */
     checkoutBtn.addEventListener('click', async () => {
       if (!CART.length) { alert('A kosár üres.'); return; }
 
-      // ellenőrizzük, hogy minden tételhez van Price ID
-      const missing = CART.filter(it => !PRICE_BY_NAME[it.name]);
+      // ellenőrzés: minden kosár tételhez van-e Price ID
+      const missing = CART.filter(it => !PRICE_BY_ID[it.id]);
       if (missing.length) {
-        alert('Hiányzik Price ID ezekhez: ' + missing.map(m => m.name).join(', ') + '. Kérlek add hozzá a PRICE_BY_NAME táblához.');
+        alert('Hiányzik Stripe Price ID ezekhez: ' + missing.map(m => `${m.name} (${m.id})`).join(', ') + '. Add hozzá a PRICE_BY_ID táblához!');
         return;
       }
 
-      // lineItems felépítése a Stripe számára
+      // lineItems felépítése a Stripe számára az ID-k alapján
       const lineItems = CART.map(it => ({
-        price: PRICE_BY_NAME[it.name],
+        price: PRICE_BY_ID[it.id],
         quantity: it.qty
       }));
 
