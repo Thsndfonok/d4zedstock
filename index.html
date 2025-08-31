@@ -118,15 +118,15 @@
     .tilt{perspective:800px}.tilt>*{transform:rotateX(var(--rx,0)) rotateY(var(--ry,0));transition:transform .2s}
   </style>
 
-  <!-- SELL.APP EMBED (Stripe-os checkout a saját oldalon, modálban) -->
+  <!-- SELL.APP EMBED (Stripe-os checkout modálban) -->
   <link rel="stylesheet" href="https://cdn.sell.app/embed/style.css" />
 
-  <!-- Stripe JS (meghagyjuk más funkciókra, de a checkoutot most a Sell.app intézi) -->
+  <!-- Stripe JS (meghagyva másra, de a checkoutot most a Sell.app intézi) -->
   <script src="https://js.stripe.com/v3/"></script>
 
-  <!-- PayPal JS SDK (állítsd be a saját Client ID-t és devizát) -->
+  <!-- PayPal JS SDK -->
   <script>
-    const PAYPAL_CLIENT_ID = "ARwugVxXwGXQGdUOSLoAyBdlDFFxaTRXR1qyvtEeczRHVJnivWPZKGSAvRjx6ZZfXZeoOB5W6Vdvs3BE";  // <-- CSERÉLD SAJÁTRA
+    const PAYPAL_CLIENT_ID = "ARwugVxXwGXQGdUOSLoAyBdlDFFxaTRXR1qyvtEeczRHVJnivWPZKGSAvRjx6ZZfXZeoOB5W6Vdvs3BE";
     const PAYPAL_CURRENCY = "HUF";
     (function loadPayPal(){
       const s = document.createElement('script');
@@ -304,24 +304,23 @@
       <!-- SELL.APP fizetés (Stripe modál) -->
       <button class="btn btn-prim" id="checkoutBtn">Fizetés (Sell.app / Stripe)</button>
 
-      <!-- PayPal (ide rajzol a JS gombokat) -->
+      <!-- PayPal -->
       <div id="paypal-container" style="margin-top:6px;"></div>
 
       <small style="opacity:.65">* Stripe (Sell.app modál) vagy PayPal – digitális termékek / automata teljesítés.</small>
     </div>
   </aside>
 
-  <!-- Láthatatlan Sell.app gombok a programozott megnyitáshoz -->
+  <!-- Láthatatlan Sell.app gombok -->
   <div id="sellapp-hidden" style="display:none;"></div>
 
   <script>
     /* ===== CONFIG ===== */
 
-    /* SELL.APP bolt- és termék-azonosítók – CSERÉLD KI A SAJÁTJAIDRA! */
-    const SELL_STORE_ID = "67386"; // pl. "abcd1234"
+    /* SELL.APP bolt- és termék-azonosítók */
+    const SELL_STORE_ID = "67386";
     const SELL_PRODUCT_BY_ID = {
-      /* shop belső id -> sell.app product id */
-      p1: "325703",
+      p1: "",                 // Netflix (példa)
       p2: "SELL_PROD_ID_FOR_p2",
       p3: "SELL_PROD_ID_FOR_p3",
       p4: "SELL_PROD_ID_FOR_p4",
@@ -335,11 +334,28 @@
       p12:"SELL_PROD_ID_FOR_p12"
     };
 
-    /* SUCCESS/CANCEL: Sell.app-nál a redirect a termékbeállításoknál állítható! */
+    /* Ha a termék variánsos, itt add meg a VARIÁNS ID-kat is */
+    const SELL_VARIANT_BY_ID = {
+      p1: "",                 // <-- variáns ID ehhez a termékhez
+      p2: "",
+      p3: "",
+      p4: "",
+      p5: "",
+      p6: "",
+      p7: "",
+      p8: "325703",
+      p9: "",
+      p10:"",
+      p11:"",
+      p12:""
+     
+    };
+
+    /* SUCCESS/CANCEL: Sell.app-nál a redirectet a termékbeállításoknál add meg. */
     const SUCCESS_URL = "https://d4zedstock.store/success.html";
     const CANCEL_URL  = "https://d4zedstock.store/cancel.html";
 
-    /* Stripe publikus kulcs maradhat más funkciókhoz (nem használjuk a redirectToCheckout-ot). */
+    /* Stripe kulcs (nem használjuk checkoutra, csak megmaradt, ha később kellene) */
     const STRIPE_PUBLISHABLE_KEY = "pk_live_51S1yqr1Jm1mdXy5jM18rwc5y5JyUA2KhWIwJ5VcwXp9u7LlSWYey34FGBbLw36n4MF6QyaN8wx40we4ZLxRR8SB900IMi7H4hq";
     const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
   </script>
@@ -604,14 +620,19 @@
     function ensureHiddenButtonFor(productId){
       const sellProduct = SELL_PRODUCT_BY_ID[productId];
       if(!sellProduct) return null;
+
       let btn = document.getElementById(`sellbtn-${productId}`);
       if(!btn){
         btn = document.createElement('button');
         btn.id = `sellbtn-${productId}`;
         btn.setAttribute('data-sell-store', SELL_STORE_ID);
         btn.setAttribute('data-sell-product', sellProduct);
-        btn.setAttribute('data-sell-darkmode', 'true');
-        btn.setAttribute('data-sell-theme', '#0bbf4c');
+        btn.setAttribute('data-sell-darkmode', 'true');     // ne adjunk üres theme-et
+
+        // ha van variáns ehhez a termékhez, adjuk át
+        const v = SELL_VARIANT_BY_ID[productId];
+        if (v) btn.setAttribute('data-sell-variant', v);
+
         document.getElementById('sellapp-hidden').appendChild(btn);
       }
       return btn;
@@ -636,10 +657,10 @@
         return;
       }
 
-      // mennyiség átadása a data attribútusban
+      // mennyiség átadása
       hiddenBtn.setAttribute('data-sell-quantity', String(qty));
 
-      // Sell.app modál megnyitása a gomb "kattintásával"
+      // Sell.app modál megnyitása
       hiddenBtn.click();
     });
 
@@ -665,7 +686,7 @@
           });
         },
         onApprove: (data, actions) => {
-          return actions.order.capture().then(details => {
+          return actions.order.capture().then(() => {
             CART = []; saveCart();
             window.location.href = SUCCESS_URL + `?pp_order=${encodeURIComponent(data.orderID)}`;
           });
@@ -681,7 +702,7 @@
     render(); handleHash();
     el('#year').textContent=new Date().getFullYear();
     const li=el('#link-instagram'); if(li) li.href=SOCIAL.instagram;
-    const lt=el('#link-tiktok'); if(lt) lt.href=SOCIAL.tiktok;
+    const lt=el('#link-tiktok'); if(lt) li && (lt.href=SOCIAL.tiktok);
     const ld=el('#link-discord'); if(ld) ld.href=SOCIAL.discord;
     const mq=el('#marquee'); mq.innerHTML+=mq.innerHTML;
     setTimeout(()=>reveal.observeAll(),50);
