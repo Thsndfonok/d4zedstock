@@ -43,7 +43,6 @@
     .lead{color:var(--muted);max-width:700px;font-size:clamp(16px,2.3vw,19px)}
     .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
     .hero-badges{display:flex;gap:22px;margin-top:24px;color:rgba(255,255,255,.8);flex-wrap:wrap}
-    .hero-badges span{display:inline-flex;align-items:center;gap:8px;font-size:14px}
     .blob{position:absolute;border-radius:50%;filter:blur(50px);opacity:.3;mix-blend:screen}
     .blob.b1{width:360px;height:360px;background:radial-gradient(circle at 30% 30%,#8a2be2,transparent 60%);top:-60px;left:-60px;animation:float1 12s ease-in-out infinite}
     .blob.b2{width:420px;height:420px;background:radial-gradient(circle at 60% 60%,#00e5ff,transparent 60%);right:-80px;top:0;animation:float2 13s ease-in-out infinite}
@@ -119,8 +118,22 @@
     .tilt{perspective:800px}.tilt>*{transform:rotateX(var(--rx,0)) rotateY(var(--ry,0));transition:transform .2s}
   </style>
 
-  <!-- Stripe JS (Checkout-hoz kötelező) -->
+  <!-- Stripe JS (Checkout-hoz) -->
   <script src="https://js.stripe.com/v3/"></script>
+
+  <!-- PayPal JS SDK (állítsd be a saját Client ID-t és devizát) -->
+  <script>
+    const PAYPAL_CLIENT_ID = "ARwugVxXwGXQGdUOSLoAyBdlDFFxaTRXR1qyvtEeczRHVJnivWPZKGSAvRjx6ZZfXZeoOB5W6Vdvs3BE";  // <-- CSERÉLD SAJÁTRA
+    const PAYPAL_CURRENCY = "HUF";                      // ha nem támogatott nálad, állítsd pl. "EUR"-ra
+
+    // PayPal SDK betöltése dinamikusan, hogy a PAYPAL_CURRENCY változót tudjuk használni
+    (function loadPayPal(){
+      const s = document.createElement('script');
+      s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(PAYPAL_CLIENT_ID)}&currency=${encodeURIComponent(PAYPAL_CURRENCY)}&intent=capture`;
+      s.defer = true;
+      document.head.appendChild(s);
+    })();
+  </script>
 </head>
 <body>
   <!-- ===== Navigáció ===== -->
@@ -286,8 +299,14 @@
     <div class="cart-items" id="cartItems"></div>
     <div class="cart-footer">
       <div class="summary"><span>Köztes összeg</span><strong id="subtotal" aria-live="polite">0 Ft</strong></div>
-      <button class="btn btn-prim" id="checkoutBtn">Tovább a fizetéshez</button>
-      <small style="opacity:.65">* Stripe Checkout-tal fizethető.</small>
+
+      <!-- 1) Stripe -->
+      <button class="btn btn-prim" id="checkoutBtn">Stripe – Tovább a fizetéshez</button>
+
+      <!-- 2) PayPal (ide rajzol a JS gombokat) -->
+      <div id="paypal-container" style="margin-top:6px;"></div>
+
+      <small style="opacity:.65">* Stripe vagy PayPal fizetés – digitális termékek / automata teljesítés.</small>
     </div>
   </aside>
 
@@ -298,7 +317,7 @@
     const CANCEL_URL  = "https://d4zedstock.store/cancel.html";
     const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
 
-    /* ID-alapú mapping: a saját termék-id (p1..p12) → Stripe Price ID */
+    /* ID → Stripe Price ID */
     const PRICE_BY_ID = {
       p1: "price_1S1zfm1Jm1mdXy5jFFGEJI7X", // Fivem Ready
       p2: "price_1S1zfG1Jm1mdXy5jlnd31UqR", // Discord members
@@ -392,6 +411,7 @@
     const ft = n => new Intl.NumberFormat('hu-HU',{style:'currency',currency:'HUF',maximumFractionDigits:0}).format(n);
     const el = (sel,root=document)=>root.querySelector(sel);
     const els = (sel,root=document)=>[...root.querySelectorAll(sel)];
+    const getSubtotal = () => CART.reduce((s,x)=>s + x.price * x.qty, 0);
 
     /* NAV háttér */
     const nav = el('#nav');
@@ -531,7 +551,7 @@
 
     let CART=JSON.parse(localStorage.getItem('d4zed_cart')||'[]');
     function saveCart(){ localStorage.setItem('d4zed_cart', JSON.stringify(CART)); }
-    function openCart(){ drawer.classList.add('open'); drawerBack.classList.add('open'); renderCart(); }
+    function openCart(){ drawer.classList.add('open'); drawerBack.classList.add('open'); renderCart(); renderPayPalButtons(); }
     function closeCart(){ drawer.classList.remove('open'); drawerBack.classList.remove('open'); }
 
     function addToCart(id){
@@ -540,8 +560,8 @@
       if(ex) ex.qty+=1; else CART.push({id:p.id,name:p.name,price:p.price,art:p.art,img:p.img,qty:1});
       saveCart(); openCart();
     }
-    function changeQty(id,d){ const it=CART.find(x=>x.id===id); if(!it) return; it.qty=Math.max(1,it.qty+d); saveCart(); renderCart(); }
-    function removeItem(id){ CART=CART.filter(x=>x.id!==id); saveCart(); renderCart(); }
+    function changeQty(id,d){ const it=CART.find(x=>x.id===id); if(!it) return; it.qty=Math.max(1,it.qty+d); saveCart(); renderCart(); renderPayPalButtons(); }
+    function removeItem(id){ CART=CART.filter(x=>x.id!==id); saveCart(); renderCart(); renderPayPalButtons(); }
 
     function renderCart(){
       if(!CART.length){ cartItems.innerHTML='<div style="opacity:.7;text-align:center;padding:20px;">A kosár üres.</div>'; subtotalEl.textContent=ft(0); return; }
@@ -565,41 +585,72 @@
       cartItems.querySelectorAll('[data-dec]').forEach(b=>b.addEventListener('click',()=>changeQty(b.dataset.dec,-1)));
       cartItems.querySelectorAll('[data-inc]').forEach(b=>b.addEventListener('click',()=>changeQty(b.dataset.inc,1)));
       cartItems.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>removeItem(b.dataset.del)));
-      const subtotal=CART.reduce((s,x)=>s+x.price*x.qty,0); subtotalEl.textContent=ft(subtotal);
+      const subtotal=getSubtotal(); subtotalEl.textContent=ft(subtotal);
     }
 
-    /* ===== STRIPE: Fizetés a kosárból (ID-alapú mappinggal) ===== */
+    /* ===== STRIPE: Fizetés a kosárból ===== */
     checkoutBtn.addEventListener('click', async () => {
       if (!CART.length) { alert('A kosár üres.'); return; }
-
-      // ellenőrzés: minden kosár tételhez van-e Price ID
       const missing = CART.filter(it => !PRICE_BY_ID[it.id]);
       if (missing.length) {
         alert('Hiányzik Stripe Price ID ezekhez: ' + missing.map(m => `${m.name} (${m.id})`).join(', ') + '. Add hozzá a PRICE_BY_ID táblához!');
         return;
       }
-
-      // lineItems felépítése a Stripe számára az ID-k alapján
-      const lineItems = CART.map(it => ({
-        price: PRICE_BY_ID[it.id],
-        quantity: it.qty
-      }));
-
+      const lineItems = CART.map(it => ({ price: PRICE_BY_ID[it.id], quantity: it.qty }));
       try {
         const result = await stripe.redirectToCheckout({
-          lineItems,
-          mode: "payment",
-          successUrl: SUCCESS_URL,
-          cancelUrl: CANCEL_URL,
+          lineItems, mode: "payment", successUrl: SUCCESS_URL, cancelUrl: CANCEL_URL,
         });
-        if (result.error) {
-          alert(result.error.message);
-        }
+        if (result.error) alert(result.error.message);
       } catch (err) {
-        console.error(err);
-        alert('Ismeretlen hiba történt a fizetés indításakor.');
+        console.error(err); alert('Ismeretlen hiba történt a Stripe fizetés indításakor.');
       }
     });
+
+    /* ===== PAYPAL: Gombok kirajzolása és fizetés ===== */
+    function renderPayPalButtons(){
+      const cont = el('#paypal-container');
+      if(!cont) return;
+      // PayPal Buttons csak akkor rajzoljuk, ha betöltődött az SDK
+      if (typeof window.paypal === 'undefined') {
+        // várunk egy kicsit és újrapróbáljuk (egyszerű retry)
+        setTimeout(renderPayPalButtons, 300);
+        return;
+      }
+      cont.innerHTML = ""; // újrarajzolás (pl. mennyiség változott)
+
+      const subtotal = getSubtotal();
+      if (subtotal <= 0) { cont.innerHTML = ""; return; }
+
+      window.paypal.Buttons({
+        style: { layout: 'vertical', shape: 'rect', label: 'paypal' },
+        createOrder: (data, actions) => {
+          // Megjegyzés: a HUF „0 tizedes” pénznem – a value legyen egész szám/string.
+          const amountValue = String(subtotal);
+          return actions.order.create({
+            purchase_units: [{
+              amount: {
+                currency_code: PAYPAL_CURRENCY,
+                value: amountValue
+              },
+              description: 'd4zedstore – kosár'
+            }],
+            application_context: { shipping_preference: 'NO_SHIPPING' }
+          });
+        },
+        onApprove: (data, actions) => {
+          return actions.order.capture().then(details => {
+            // Siker – kosár ürítése és átirányítás
+            CART = []; saveCart();
+            window.location.href = SUCCESS_URL + `?pp_order=${encodeURIComponent(data.orderID)}`;
+          });
+        },
+        onError: (err) => {
+          console.error(err);
+          alert('Hiba történt a PayPal fizetés közben.');
+        }
+      }).render('#paypal-container');
+    }
 
     /* Init */
     render(); handleHash();
