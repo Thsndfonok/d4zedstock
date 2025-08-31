@@ -1,9 +1,133 @@
-<!-- cancel.html -->
 <!DOCTYPE html>
 <html lang="hu">
-<head><meta charset="UTF-8"><title>Fizetés megszakítva</title></head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fizetés megszakítva – d4zedstore</title>
+  <meta name="description" content="A fizetés megszakadt vagy sikertelen volt. Próbáld újra a d4zedstore-ban." />
+  <meta name="theme-color" content="#0b0b12" />
+  <style>
+    :root{
+      --bg:#0b0b12; --card:rgba(255,255,255,.06); --card-2:rgba(255,255,255,.08);
+      --glass:rgba(255,255,255,.08); --text:#f4f4f7; --muted:rgba(255,255,255,.75);
+      --line:rgba(255,255,255,.12); --brand1:#b252ff; --brand2:#6ea8ff; --accent:#63f5d5;
+      --ok:#6ee7b7; --warn:#f59e0b; --err:#ef4444; --radius:18px; --shadow:0 10px 40px -10px rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,"Helvetica Neue",Arial;
+      background:radial-gradient(1200px 800px at 20% -20%,rgba(255,255,255,.06),transparent 60%),
+                 radial-gradient(1000px 600px at 120% 20%,rgba(255,255,255,.06),transparent 60%),
+                 linear-gradient(120deg,#0a0a12,#0a0a12 60%,#0c0f1a);
+      background-size:200% 200%;
+      animation:gradientMove 16s linear infinite;
+      color:var(--text);
+      display:grid;
+      place-items:center;
+      padding:28px;
+      overflow:hidden;
+    }
+    @keyframes gradientMove{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+    .max{width:min(900px,94vw);margin-inline:auto}
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.04));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .wrap{display:grid;gap:18px;padding:26px}
+    .brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px}
+    .brand-badge{width:28px;height:28px;border-radius:10px;background:conic-gradient(from 0deg,var(--brand1),var(--brand2),var(--brand1));filter:saturate(1.1) contrast(1.1);box-shadow:0 8px 30px -10px rgba(178,82,255,.7);animation:spin 12s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .hero{
+      display:grid;gap:14px;justify-items:center;text-align:center;padding:10px 8px 4px;
+    }
+    .xwrap{
+      width:86px;height:86px;border-radius:50%;
+      display:grid;place-items:center;
+      background:radial-gradient(circle at 30% 30%,#ef444455,transparent 60%),rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      box-shadow:0 10px 40px -10px rgba(239,68,68,.45);
+      position:relative;overflow:hidden;
+      animation:pop .6s ease-out both;
+    }
+    .xwrap svg{width:40px;height:40px;color:var(--err)}
+    @keyframes pop{0%{transform:scale(.6);opacity:.2}70%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+    h1{font-size:clamp(24px,4.5vw,36px);font-weight:900;letter-spacing:-.02em;
+       background:linear-gradient(90deg,#ffd6ff,#e4e7ff,#d1fff3);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .lead{color:var(--muted);max-width:60ch}
+    .hint{font-size:14px;opacity:.8}
+    .row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:6px}
+
+    .btn{
+      padding:10px 16px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);color:inherit;display:inline-flex;align-items:center;gap:8px;
+      text-decoration:none;box-shadow:var(--shadow);transition:transform .15s ease,opacity .15s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-prim{background:linear-gradient(90deg,var(--brand1),var(--brand2));border-color:transparent;font-weight:700}
+    .list{
+      margin-top:8px;padding:14px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line);
+      display:grid;gap:8px
+    }
+    .footer{opacity:.65;font-size:13px;text-align:center;padding:8px 0 2px}
+    .shine{position:relative}
+    .shine::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(120deg,rgba(255,255,255,.12),rgba(255,255,255,0) 20%,rgba(255,255,255,.12) 40%,rgba(255,255,255,0) 60%,rgba(255,255,255,.12) 80%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:borderShift 6s linear infinite;pointer-events:none}
+    @keyframes borderShift{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    .shake{animation:shake .3s ease-in-out 2}
+    @keyframes shake{
+      0%,100%{transform:translateX(0)}
+      25%{transform:translateX(-6px)}
+      75%{transform:translateX(6px)}
+    }
+  </style>
+</head>
 <body>
-  <h1>A fizetés megszakadt.</h1>
-  <p>Nem történt levonás, próbáld újra, ha szeretnél.</p>
+  <div class="max">
+    <div class="card shine">
+      <div class="wrap">
+        <div class="brand" aria-label="d4zedstore">
+          <span class="brand-badge" aria-hidden="true"></span>
+          <span>d4zedstore</span>
+        </div>
+
+        <div class="hero">
+          <div class="xwrap shake" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </div>
+          <h1>Fizetés megszakítva</h1>
+          <p class="lead">Úgy tűnik, a fizetés most félbeszakadt vagy sikertelen volt. A kosarad megmaradt, bármikor újra próbálhatod.</p>
+
+          <div class="row">
+            <a class="btn btn-prim" href="/">Vissza a kezdőlapra →</a>
+            <a class="btn" href="/">Vissza a kosárhoz</a>
+            <a class="btn" href="https://discord.gg/8XsAAE43Gf" target="_blank" rel="noopener">Segítség (Discord)</a>
+          </div>
+
+          <div class="list">
+            <div class="hint">💡 Tipp: ellenőrizd a kártyaadatokat, az egyenleget és hogy engedélyezett-e az online/külföldi vásárlás.</div>
+            <div>💬 Ha elakadtál: <strong>Discord: 2ouq</strong> • <strong>Instagram: thsnd._</strong></div>
+          </div>
+        </div>
+
+        <div class="footer">© <span id="year"></span> d4zedstore • Minden jog fenntartva.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // évszám
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // fontos: NEM töröljük a kosarat itt!
+    // ha szeretnéd, hogy a főoldal automatikusan megnyissa a kosarat, tárolhatsz itt egy flaget:
+    // localStorage.setItem('open_cart_on_load', '1');
+    // (ehhez a főoldalon egy apró kód kell, ami induláskor ellenőrzi és meghívja az openCart()-ot.)
+  </script>
 </body>
 </html>
