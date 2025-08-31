@@ -292,28 +292,61 @@
   </aside>
 
   <script>
-    /* ===== Stripe beállítás ===== */
-    const STRIPE_PUBLISHABLE_KEY = "pk_live_51S1yqr1Jm1mdXy5jM18rwc5y5JyUA2KhWIwJ5VcwXp9u7LlSWYey34FGBbLw36n4MF6QyaN8wx40we4ZLxRR8SB900IMi7H4hq"; // <-- IDE a saját Publishable Key
-    const SUCCESS_URL = "https://d4zedstock.store/success.html"; // sikeres fizetés után
-    const CANCEL_URL  = "https://d4zedstock.store/cancel.html";  // megszakítás esetén
-    const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+  // --- STRIPE kulcsok ---
+  const STRIPE_PUBLISHABLE_KEY = "pk_live_51S1yqr1Jm1mdXy5jM18rwc5y5JyUA2KhWIwJ5VcwXp9u7LlSWYey34FGBbLw36n4MF6QyaN8wx40we4ZLxRR8SB900IMi7H4hq";     // maradhat a tiéd
+  const SUCCESS_URL = "https://d4zedstock.store/success.html";
+  const CANCEL_URL  = "https://d4zedstock.store/cancel.html";
+  const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
 
-    /* A megadott Price ID-k hozzárendelése a terméknevekhez */
-    const PRICE_BY_NAME = {
-      "Discord Account":      "price_1S1zde1Jm1mdXy5jywSL35GJ",
-      "Steam Account":        "price_1S1zde1Jm1mdXy5jywSL35GJ", // ha külön Steam árad van, tedd ide azt!
-      "Fivem Ready":          "price_1S1zds1Jm1mdXy5j7od0Y4dh",
-      "Random Decorations":   "price_1S1ze71Jm1mdXy5jfJuTsUF0",
-      "Discord members":      "price_1S1zeQ1Jm1mdXy5jWoPnJCl9",
-      "Instagram Follower":   "price_1S1zef1Jm1mdXy5jf8VE4Vb8",
-      "Tiktok Follower":      "price_1S1zet1Jm1mdXy5jL5nHbwZF",
-      "youtube follower":     "price_1S1zfG1Jm1mdXy5jlnd31UqR",
-      "Chuncyroll":           "price_1S1zfS1Jm1mdXy5jKhL5CyMf",
-      "HBO MAX":              "price_1S1zfm1Jm1mdXy5jFFGEJI7X",
-      "Disney":               "price_1S1zfy1Jm1mdXy5jrNovw79f",
-      "Netflix":              "price_1S1zgA1Jm1mdXy5j4nSP6eGl"
-    };
-  </script>
+  // --- MINDIG id alapján mapeljünk (nem név!) ---
+  const PRICE_BY_ID = {
+    p1: "price_1S1zds1Jm1mdXy5j7od0Y4dh", // Fivem Ready
+    p2: "price_1S1zeQ1Jm1mdXy5jWoPnJCl9", // Discord members
+    p3: "price_1S1zfG1Jm1mdXy5jlnd31UqR", // youtube follower
+    p4: "price_1S1zfm1Jm1mdXy5jFFGEJI7X", // HBO MAX
+    p5: "price_1S1zde1Jm1mdXy5jywSL35GJ", // Steam Account
+    p6: "price_1S1zet1Jm1mdXy5jL5nHbwZF", // Tiktok Follower
+    p7: "price_1S1zfy1Jm1mdXy5jrNovw79f", // Disney
+    p8: "price_1S1zgA1Jm1mdXy5j4nSP6eGl", // Netflix
+    p9: "price_1S1ze71Jm1mdXy5jfJuTsUF0", // Random Decorations
+    p10:"price_1S1zdS1Jm1mdXy5jCop9lfJC", // Discord Account
+    p11:"price_1S1zef1Jm1mdXy5jf8VE4Vb8", // Instagram Follower
+    p12:"price_1S1zfS1Jm1mdXy5jKhL5CyMf", // Chuncyroll
+  };
+
+  // … a kódod többi része …
+
+  // ===== STRIPE: Fizetés a kosárból =====
+  checkoutBtn.addEventListener("click", async () => {
+    if (!CART.length) { alert("A kosár üres."); return; }
+
+    // Ellenőrzés – minden kosár tételnek legyen Price ID-ja azonosító alapján
+    const missing = CART.filter(it => !PRICE_BY_ID[it.id]);
+    if (missing.length) {
+      alert("Hiányzik Price ID ezekhez: " + missing.map(m => m.name).join(", "));
+      return;
+    }
+
+    // A Stripe-hoz küldött tételek
+    const lineItems = CART.map(it => ({
+      price: PRICE_BY_ID[it.id],
+      quantity: it.qty
+    }));
+
+    try {
+      const result = await stripe.redirectToCheckout({
+        lineItems,
+        mode: "payment",
+        successUrl: SUCCESS_URL,
+        cancelUrl: CANCEL_URL,
+      });
+      if (result.error) alert(result.error.message);
+    } catch (err) {
+      console.error(err);
+      alert("Hiba a fizetés indításakor.");
+    }
+  });
+</script>
 
   <script>
     /* ===== Social linkek ===== */
