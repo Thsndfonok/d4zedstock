@@ -1,9 +1,180 @@
-<!-- success.html -->
 <!DOCTYPE html>
 <html lang="hu">
-<head><meta charset="UTF-8"><title>Sikeres fizetés</title></head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sikeres fizetés – d4zedstore</title>
+  <meta name="description" content="Sikeres fizetés. Köszönjük a vásárlást a d4zedstore-ban!" />
+  <meta name="theme-color" content="#0b0b12" />
+  <style>
+    :root{
+      --bg:#0b0b12; --card:rgba(255,255,255,.06); --card-2:rgba(255,255,255,.08);
+      --glass:rgba(255,255,255,.08); --text:#f4f4f7; --muted:rgba(255,255,255,.75);
+      --line:rgba(255,255,255,.12); --brand1:#b252ff; --brand2:#6ea8ff; --accent:#63f5d5;
+      --ok:#6ee7b7; --warn:#f59e0b; --err:#ef4444; --radius:18px; --shadow:0 10px 40px -10px rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,"Helvetica Neue",Arial;
+      background:radial-gradient(1200px 800px at 20% -20%,rgba(255,255,255,.06),transparent 60%),
+                 radial-gradient(1000px 600px at 120% 20%,rgba(255,255,255,.06),transparent 60%),
+                 linear-gradient(120deg,#0a0a12,#0a0a12 60%,#0c0f1a);
+      background-size:200% 200%;
+      animation:gradientMove 16s linear infinite;
+      color:var(--text);
+      display:grid;
+      place-items:center;
+      padding:28px;
+      overflow:hidden;
+    }
+    @keyframes gradientMove{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+    .max{width:min(900px,94vw);margin-inline:auto}
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.04));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .wrap{display:grid;gap:18px;padding:26px}
+    .brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px}
+    .brand-badge{width:28px;height:28px;border-radius:10px;background:conic-gradient(from 0deg,var(--brand1),var(--brand2),var(--brand1));filter:saturate(1.1) contrast(1.1);box-shadow:0 8px 30px -10px rgba(178,82,255,.7);animation:spin 12s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .hero{
+      display:grid;gap:14px;justify-items:center;text-align:center;padding:10px 8px 4px;
+    }
+    .check{
+      width:86px;height:86px;border-radius:50%;
+      display:grid;place-items:center;
+      background:radial-gradient(circle at 30% 30%,#22c55e55,transparent 60%),rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      box-shadow:0 10px 40px -10px rgba(16,185,129,.45);
+      position:relative;overflow:hidden;
+    }
+    .check svg{width:42px;height:42px;color:var(--ok)}
+    .pop{animation:pop .6s ease-out both}
+    @keyframes pop{0%{transform:scale(.6);opacity:.2}70%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+
+    h1{font-size:clamp(24px,4.5vw,36px);font-weight:900;letter-spacing:-.02em;
+       background:linear-gradient(90deg,#ffd6ff,#e4e7ff,#d1fff3);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .lead{color:var(--muted);max-width:60ch}
+    .order{font-size:14px;opacity:.8}
+    .row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:6px}
+
+    .btn{
+      padding:10px 16px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);color:inherit;display:inline-flex;align-items:center;gap:8px;
+      text-decoration:none;box-shadow:var(--shadow);transition:transform .15s ease,opacity .15s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-prim{background:linear-gradient(90deg,var(--brand1),var(--brand2));border-color:transparent;font-weight:700}
+    .list{
+      margin-top:8px;padding:14px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line);
+      display:grid;gap:8px
+    }
+    .footer{opacity:.65;font-size:13px;text-align:center;padding:8px 0 2px}
+    .shine{position:relative}
+    .shine::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(120deg,rgba(255,255,255,.12),rgba(255,255,255,0) 20%,rgba(255,255,255,.12) 40%,rgba(255,255,255,0) 60%,rgba(255,255,255,.12) 80%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:borderShift 6s linear infinite;pointer-events:none}
+    @keyframes borderShift{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+
+    /* apró konfetti */
+    .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+    .confetti i{
+      position:absolute;top:-10px;width:6px;height:10px;opacity:.9;
+      background:linear-gradient(180deg,var(--brand1),var(--brand2));
+      animation:fall linear forwards;
+      transform:rotate(10deg);
+    }
+    @keyframes fall{
+      to{transform:translateY(110vh) rotate(360deg)}
+    }
+  </style>
+</head>
 <body>
-  <h1>Köszönjük a vásárlást!</h1>
-  <p>Kérlek vedd fel velem a kapcsolatot. Discord: 2ouq Instagram: thsnd._ Discord szerver: https://discord.gg/8XsAAE43Gf</p>
+  <div class="max">
+    <div class="card shine">
+      <div class="wrap">
+        <div class="brand" aria-label="d4zedstore">
+          <span class="brand-badge" aria-hidden="true"></span>
+          <span>d4zedstore</span>
+        </div>
+
+        <div class="hero">
+          <div class="check pop" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </div>
+          <h1>Köszönjük a vásárlást!</h1>
+          <p class="lead">A fizetésed sikeres volt. Kérlek Vedd fel velem a kapcsolatot.</p>
+
+          <div class="order" id="orderInfo" hidden>
+            Rendelés azonosító: <strong id="sid"></strong>
+          </div>
+
+          <div class="row">
+            <a class="btn btn-prim" href="/">Vissza a kezdőlapra →</a>
+            <a class="btn" href="https://discord.gg/8XsAAE43Gf" target="_blank" rel="noopener">Csatlakozz a Discordhoz</a>
+            <a class="btn" href="https://instagram.com/thsnd._" target="_blank" rel="noopener">Instagram</a>
+          </div>
+
+          <div class="list">
+            <div>💬 Ha kérdésed van: <strong>Discord: 2ouq</strong> • <strong>Instagram: thsnd._</strong></div>
+            <div>🔗 Közösség: <a href="https://discord.gg/8XsAAE43Gf" target="_blank" rel="noopener">discord.gg/8XsAAE43Gf</a></div>
+          </div>
+        </div>
+
+        <div class="footer">© <span id="year"></span> d4zedstore • Minden jog fenntartva.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="confetti" aria-hidden="true" id="confetti"></div>
+
+  <script>
+    // évszám
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ha a success URL így van beállítva: .../success.html?session_id={CHECKOUT_SESSION_ID}
+    // akkor megjelenítjük az azonosítót (rövidítve)
+    const p = new URLSearchParams(location.search);
+    const sid = p.get('session_id');
+    if (sid) {
+      const el = document.getElementById('sid');
+      el.textContent = sid.length > 20 ? sid.slice(0, 8) + '…' + sid.slice(-6) : sid;
+      document.getElementById('orderInfo').hidden = false;
+    }
+
+    // ürítsük a helyi kosarat (ha a főoldal ezt a kulcsot használja)
+    try { localStorage.removeItem('d4zed_cart'); } catch(e){}
+
+    // kis konfetti
+    (function confetti(){
+      const root = document.getElementById('confetti');
+      const N = 70;
+      for (let i=0;i<N;i++){
+        const s = document.createElement('i');
+        const left = Math.random()*100;
+        const delay = Math.random()*0.6;
+        const dur = 2.2+Math.random()*1.4;
+        const w = 4+Math.random()*6;
+        const h = 8+Math.random()*12;
+        s.style.left = left + 'vw';
+        s.style.width = w + 'px';
+        s.style.height = h + 'px';
+        s.style.opacity = 0.6 + Math.random()*0.4;
+        s.style.animationDuration = dur + 's';
+        s.style.animationDelay = delay + 's';
+        // kis színváltás
+        const hue = Math.floor(200 + Math.random()*160);
+        s.style.background = `linear-gradient(180deg,hsl(${hue} 100% 70%),hsl(${(hue+40)%360} 100% 60%))`;
+        root.appendChild(s);
+      }
+      // automatikus takarítás
+      setTimeout(()=>root.innerHTML='', 5000);
+    })();
+  </script>
 </body>
 </html>
